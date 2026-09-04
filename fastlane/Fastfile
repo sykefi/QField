@@ -13,7 +13,7 @@ end
 platform :ios do
   lane :setup_signing do |options|
     signing_type = options[:type] # "development", "appstore"
-    app_identifier = options[:app_identifier] # "ch.opengis.qfield", "ch.opengis.qfield-dev"
+    app_identifier = options[:app_identifier] # "fi.syke.qfield", "fi.syke.qfield-dev"
 
     setup_ci if is_ci
 
@@ -64,25 +64,25 @@ platform :ios do
     )
     match_nuke(
       type: "development",
-      app_identifier: ['ch.opengis.qfield', 'ch.opengis.qfield-dev'],
+      app_identifier: ['fi.syke.qfield', 'fi.syke.qfield-dev'],
       skip_confirmation: true,
       readonly: false
     )
     match_nuke(
       type: "appstore",
-      app_identifier: ['ch.opengis.qfield'],
+      app_identifier: ['fi.syke.qfield'],
       skip_confirmation: true,
       readonly: false
     )
     sync_code_signing(
       type: "development",
-      app_identifier: ['ch.opengis.qfield', 'ch.opengis.qfield-dev'],
+      app_identifier: ['fi.syke.qfield', 'fi.syke.qfield-dev'],
       force_for_new_devices: true,
       readonly: false
     )
     sync_code_signing(
       type: "appstore",
-      app_identifier: ['ch.opengis.qfield'],
+      app_identifier: ['fi.syke.qfield'],
       force_for_new_devices: true,
       readonly: false
     )

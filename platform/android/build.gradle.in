@@ -87,6 +87,7 @@ android {
     defaultConfig {
       minSdkVersion = @ANDROID_PLATFORM_INT@
       targetSdkVersion = @ANDROID_TARGET_PLATFORM@
+      applicationId = 'fi.syke.@APP_PACKAGE_NAME@'
       ndk {
         abiFilters "@ANDROID_ABI@"
       }

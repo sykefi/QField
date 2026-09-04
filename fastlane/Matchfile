@@ -4,4 +4,4 @@ storage_mode("git")
 
 type("development") # The default type, can be: appstore, adhoc, enterprise or development
 
-app_identifier(["ch.opengis.qfield", "ch.opengis.qfield-dev"])
+app_identifier(["fi.syke.qfield", "fi.syke.qfield-dev"])

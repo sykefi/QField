@@ -54,7 +54,7 @@
     android:requestLegacyExternalStorage="true">
     <activity
       android:name="ch.opengis.@APP_PACKAGE_NAME@.QFieldActivity"
-      android:taskAffinity="ch.opengis.@APP_PACKAGE_NAME@"
+      android:taskAffinity="fi.syke.@APP_PACKAGE_NAME@"
       android:launchMode="singleInstance"
       android:allowTaskReparenting="false"
       android:documentLaunchMode="never"
@@ -283,7 +283,7 @@
 
     <provider
         android:name="androidx.core.content.FileProvider"
-        android:authorities="ch.opengis.@APP_PACKAGE_NAME@.fileprovider"
+        android:authorities="fi.syke.@APP_PACKAGE_NAME@.fileprovider"
         android:exported="false"
         android:grantUriPermissions="true">
         <meta-data
