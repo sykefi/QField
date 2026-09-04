@@ -1,13 +1,6 @@
 ---
 name: 🍎 MacOS
-on:
-  push:
-    branches:
-      - master
-      - release-**
-  pull_request:
-  release:
-    types: ['published']
+on: []
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

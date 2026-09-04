@@ -4,18 +4,15 @@ on:
   push:
     branches:
       - master
-      - release-**
+      - sykefi-release
   pull_request:
-  release:
-    types: ['published']
   workflow_dispatch:
+  release:
+    types: ['created', 'edited']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
-env:
-  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
 jobs:
   build:
@@ -32,30 +29,30 @@ jobs:
             qt_arch: 'android_arm64_v8a'
             all_files_access: 'ON'
             artifact_name: 'android-arm64'
-          - triplet: 'arm-neon-android'
-            qt_arch: 'android_armv7'
-            all_files_access: 'OFF'
-            artifact_name: 'android-arm-neon'
-          - triplet: 'arm-neon-android'
-            qt_arch: 'android_armv7'
-            all_files_access: 'ON'
-            artifact_name: 'android-arm-neon'
-          - triplet: 'x64-android'
-            qt_arch: 'android_x86_64'
-            all_files_access: 'OFF'
-            artifact_name: 'android-x64'
-          - triplet: 'x64-android'
-            qt_arch: 'android_x86_64'
-            all_files_access: 'ON'
-            artifact_name: 'android-x64'
-          - triplet: 'x86-android'
-            qt_arch: 'android_x86'
-            all_files_access: 'OFF'
-            artifact_name: 'android-x86'
-          - triplet: 'x86-android'
-            qt_arch: 'android_x86'
-            all_files_access: 'ON'
-            artifact_name: 'android-x86'
+          # - triplet: 'arm-neon-android'
+          #   qt_arch: 'android_armv7'
+          #   all_files_access: 'OFF'
+          #   artifact_name: 'android-arm-neon'
+          # - triplet: 'arm-neon-android'
+          #   qt_arch: 'android_armv7'
+          #   all_files_access: 'ON'
+          #   artifact_name: 'android-arm-neon'
+          # - triplet: 'x64-android'
+          #   qt_arch: 'android_x86_64'
+          #   all_files_access: 'OFF'
+          #   artifact_name: 'android-x64'
+          # - triplet: 'x64-android'
+          #   qt_arch: 'android_x86_64'
+          #   all_files_access: 'ON'
+          #   artifact_name: 'android-x64'
+          # - triplet: 'x86-android'
+          #   qt_arch: 'android_x86'
+          #   all_files_access: 'OFF'
+          #   artifact_name: 'android-x86'
+          # - triplet: 'x86-android'
+          #   qt_arch: 'android_x86'
+          #   all_files_access: 'ON'
+          #   artifact_name: 'android-x86'
 
     steps:
       - name: 🐣 Checkout
@@ -162,6 +159,7 @@ jobs:
                 -D APK_VERSION_CODE="${APK_VERSION_CODE}" \
                 -D APP_VERSION_STR="${APP_VERSION_STR}" \
                 -D APP_PACKAGE_NAME="${APP_PACKAGE_NAME}" \
+                -D APP_ICON_PATH="${WORKSPACE}/platform/sykefi/icons" \
                 -D APP_ICON="${APP_ICON}" \
                 -D APP_NAME="${APP_NAME}" \
                 -D NUGET_USERNAME=opengisch \
@@ -185,7 +183,7 @@ jobs:
 
       - name: 🔑 Setup signing key
         env:
-          SIGNINGKEY: ${{ secrets.PLAYSTORE_SIGNINGKEY }}
+          SIGNINGKEY: ${{ secrets.APK_SIGNINGKEY }}
         run: |
           echo "$SIGNINGKEY" | base64 --decode > ./keystore.p12
 
@@ -211,13 +209,13 @@ jobs:
             /tmp/${{ env.CI_PACKAGE_NAME }}-${{ env.CI_PACKAGE_FILE_SUFFIX }}-${{ matrix.artifact_name }}.apk
             /tmp/${{ env.CI_PACKAGE_NAME }}-${{ env.CI_PACKAGE_FILE_SUFFIX }}-${{ matrix.artifact_name }}-debug.apk
 
-      - name: 🍺 Deploy
-        run: |
-          sudo apt install -y s3cmd
-          # This script will rename the artifact and move it to /tmp
-          NAME=${{ matrix.artifact_name }} ALL_FILES_ACCESS=${{ matrix.all_files_access }} ./scripts/ci/upload_artifacts.sh
-        env:
-          S3CFG: ${{ secrets.S3CMD_CFG }}
+      # - name: 🍺 Deploy
+      #   run: |
+      #     sudo apt install -y s3cmd
+      #     # This script will rename the artifact and move it to /tmp
+      #     NAME=${{ matrix.artifact_name }} ALL_FILES_ACCESS=${{ matrix.all_files_access }} ./scripts/ci/upload_artifacts.sh
+      #   env:
+      #     S3CFG: ${{ secrets.S3CMD_CFG }}
 
       - name: Upload release assets
         uses: AButler/upload-release-assets@v4.0.0
@@ -237,49 +235,49 @@ jobs:
           bundle exec fastlane run sentry_debug_files_upload path:${{ env.CMAKE_BUILD_DIR }}/src/app/android-build/build/intermediates/merged_native_libs/release
 
 
-  deploy_to_playstore:
-    name: deploy to play store
-    runs-on: ubuntu-24.04
-    needs: build
-    if: ${{ ( github.event_name == 'release' || ( github.event_name == 'push' && github.ref == 'refs/heads/master' ) ) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+  # deploy_to_playstore:
+  #   name: deploy to play store
+  #   runs-on: ubuntu-24.04
+  #   needs: build
+  #   if: ${{ ( github.event_name == 'release' || ( github.event_name == 'push' && github.ref == 'refs/heads/master' ) ) }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+  #       if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
 
-      - name: Vars
-        id: vars
-        if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
-        run: |
-          ./scripts/ci/env_gh.sh
+  #     - name: Vars
+  #       id: vars
+  #       if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+  #       run: |
+  #         ./scripts/ci/env_gh.sh
 
-      - name: Download apks
-        if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
-        run: |
-          wget https://sos-ch-dk-2.exo.io/qfieldapks/ci-builds/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm64.apk
-          wget https://sos-ch-dk-2.exo.io/qfieldapks/ci-builds/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm-neon.apk
-          wget https://sos-ch-dk-2.exo.io/qfieldapks/ci-builds/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x64.apk
-          wget https://sos-ch-dk-2.exo.io/qfieldapks/ci-builds/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x86.apk
+  #     - name: Download apks
+  #       if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+  #       run: |
+  #         wget https://sos-ch-dk-2.exo.io/qfieldapks/ci-builds/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm64.apk
+  #         wget https://sos-ch-dk-2.exo.io/qfieldapks/ci-builds/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm-neon.apk
+  #         wget https://sos-ch-dk-2.exo.io/qfieldapks/ci-builds/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x64.apk
+  #         wget https://sos-ch-dk-2.exo.io/qfieldapks/ci-builds/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x86.apk
 
-      - name: Upload to Google Play Store
-        if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
-        run: |
-          pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib oauth2client
+  #     - name: Upload to Google Play Store
+  #       if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+  #       run: |
+  #         pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib oauth2client
 
-          if [[ -n "${{ env.CI_TAG }}" ]]
-          then
-            RELEASE_MESSAGE="Find out what's new on https://github.com/opengisch/QField/releases/tag/${{ env.CI_TAG }}"
-          else
-            RELEASE_MESSAGE="Update from commit ${GITHUB_SHA}"
-          fi
+  #         if [[ -n "${{ env.CI_TAG }}" ]]
+  #         then
+  #           RELEASE_MESSAGE="Find out what's new on https://github.com/opengisch/QField/releases/tag/${{ env.CI_TAG }}"
+  #         else
+  #           RELEASE_MESSAGE="Update from commit ${GITHUB_SHA}"
+  #         fi
 
-          ./scripts/basic_upload_apks_service_account.py ch.opengis.${{ env.APP_PACKAGE_NAME }} beta "${RELEASE_MESSAGE}" \
-              qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm64.apk \
-              qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm-neon.apk \
-              qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x64.apk \
-              qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x86.apk
-        env:
-          GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
+  #         ./scripts/basic_upload_apks_service_account.py ch.opengis.${{ env.APP_PACKAGE_NAME }} beta "${RELEASE_MESSAGE}" \
+  #             qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm64.apk \
+  #             qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm-neon.apk \
+  #             qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x64.apk \
+  #             qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x86.apk
+  #       env:
+  #         GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
 
 
   comment_pr:
@@ -302,18 +300,12 @@ jobs:
           marker: android
           body: |
             ### 📱 Android builds
-            Download an [Android arm64 build of this PR for testing](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm64.zip).
+            Download an [Android arm64 build of this PR for testing](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm64.zip).
             *(Built from commit ${{ github.event.pull_request.head.sha }})*
             <details>
-            <summary>Other Android architectures</summary>
+            <summary>Other Android builds</summary>
 
-            - [arm-neon](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm-neon.zip)
-            - [x64](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x64.zip)
-            - [x86](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x86.zip)
-            - [**all access arm64**](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield_all_access-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm64.zip)
-            - [all access arm-neon](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield_all_access-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm-neon.zip)
-            - [all access x64](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield_all_access-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x64.zip)
-            - [all access x86](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield_all_access-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-x86.zip)
+            - [**all access arm64**](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/qfield_all_access-${{ env.CI_PACKAGE_FILE_SUFFIX }}-android-arm64.zip)
             </details>
           pr: ${{ github.event.number }}
 

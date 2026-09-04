@@ -4,10 +4,10 @@ on:
   push:
     branches:
       - master
-      - release-**
+      - sykefi-release
   pull_request:
   release:
-    types: ['published']
+    types: ['created', 'edited']
   workflow_dispatch:
 
 concurrency:
@@ -121,6 +121,7 @@ jobs:
                 -D APP_VERSION="${APP_VERSION}" \
                 -D APP_VERSION_STR="${APP_VERSION_STR}" \
                 -D APP_PACKAGE_NAME="${APP_PACKAGE_NAME}" \
+                -D APP_ICON_PATH="${SOURCE_DIR}/platform/sykefi/icons" \
                 -D ENABLE_TESTS=ON \
                 -D NUGET_USERNAME=opengisch \
                 -D NUGET_TOKEN=${{ secrets.GITHUB_TOKEN }} \
@@ -192,22 +193,22 @@ jobs:
             ${{ env.CMAKE_BUILD_DIR }}/_CPack_Packages/**/*.log
             ${{ env.CMAKE_BUILD_DIR }}/CMakeCache.txt
 
-      - name: 🎭 Sign
-        if: ( github.event_name == 'release'  && startsWith(github.ref, 'refs/tags/v') ) || github.event_name == 'workflow_dispatch' && env.ARTIFACT_NAME != null
-        uses: azure/trusted-signing-action@v2.0.0
-        with:
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-          endpoint: https://weu.codesigning.azure.net/
-          signing-account-name: OPENGISch
-          certificate-profile-name: OPENGISch
-          files-folder: ${{ env.CMAKE_BUILD_DIR }}
-          files-folder-filter: exe,msi
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-          cache-dependencies: false
+      # - name: 🎭 Sign
+      #   if: ( github.event_name == 'release'  && startsWith(github.ref, 'refs/tags/v') ) || github.event_name == 'workflow_dispatch' && env.ARTIFACT_NAME != null
+      #   uses: azure/trusted-signing-action@v2.0.0
+      #   with:
+      #     azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      #     azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      #     azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+      #     endpoint: https://weu.codesigning.azure.net/
+      #     signing-account-name: OPENGISch
+      #     certificate-profile-name: OPENGISch
+      #     files-folder: ${{ env.CMAKE_BUILD_DIR }}
+      #     files-folder-filter: exe,msi
+      #     file-digest: SHA256
+      #     timestamp-rfc3161: http://timestamp.acs.microsoft.com
+      #     timestamp-digest: SHA256
+      #     cache-dependencies: false
 
       - name: 📦 Upload artifacts
         if: ${{ env.ARTIFACT_NAME != null }}
@@ -239,15 +240,15 @@ jobs:
           ruby-version: '3.4' # Not needed with a .ruby-version file
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      - name: 🍺 Upload to S3
-        if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v')
-        env:
-          S3_BUCKET: qfieldapks
-          S3_REGION: ch-dk-2
-          S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY}}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY}}
-        run: |
-          bundle exec fastlane windows upload_s3 exe:${{ env.ARTIFACT_PATHNAME }}
+      # - name: 🍺 Upload to S3
+      #   if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v')
+      #   env:
+      #     S3_BUCKET: qfieldapks
+      #     S3_REGION: ch-dk-2
+      #     S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY}}
+      #     S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY}}
+      #   run: |
+      #     bundle exec fastlane windows upload_s3 exe:${{ env.ARTIFACT_PATHNAME }}
 
       - name: 📮 Upload debug symbols
         if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
@@ -277,7 +278,7 @@ jobs:
           marker: windows
           body: |
             ### 🪟 Windows builds
-            Download a [Windows build of this PR for testing](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-windows-x64.zip) and for [arm64](https://nightly.link/opengisch/QField/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-windows-arm64.zip).
+            Download a [Windows build of this PR for testing](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-windows-x64.zip) and for [arm64](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/qfield-${{ env.CI_PACKAGE_FILE_SUFFIX }}-windows-arm64.zip).
 
             *(Built from commit ${{ github.event.pull_request.head.sha }})*
           pr: ${{ github.event.number }}
@@ -286,7 +287,8 @@ jobs:
     name: deploy (ms store)
     runs-on: windows-2022
 
-    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v')
+    if: false
+    # if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v')
 
     needs: build
 
