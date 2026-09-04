@@ -1,6 +1,11 @@
 find_package(Qt6QuickCompiler QUIET)
 
 if(MSVC)
+  if(APP_ICON_PATH AND EXISTS "${APP_ICON_PATH}/${APP_ICON}.ico")
+    set(APP_LOGO_ICO_PATH "${APP_ICON_PATH}/${APP_ICON}.ico")
+  else()
+    set(APP_LOGO_ICO_PATH "${CMAKE_SOURCE_DIR}/images/icons/qfield_logo.ico")
+  endif()
   configure_file("${CMAKE_SOURCE_DIR}/platform/windows/appicon.rc.in"
                  "${CMAKE_CURRENT_BINARY_DIR}/appicon.rc")
   set(ICON_SRC "${CMAKE_CURRENT_BINARY_DIR}/appicon.rc")
