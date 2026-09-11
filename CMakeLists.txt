@@ -17,7 +17,8 @@ set(APP_VERSION_STR "local - dev" CACHE STRING "Application Version Name (Exampl
 set(APP_PACKAGE_NAME "qfield" CACHE STRING "Package name suffix. E.g. qfield --> ch.opengis.qfield")
 set(APP_BUNDLED_PLUGINS "" CACHE STRING "Application bundled plugins path")
 
-string(REGEX REPLACE "v" "" CLEAN_APP_VERSION "${APP_VERSION}")
+# project(VERSION) only accepts dotted numbers: v4.2.9-syke1 -> 4.2.9, v4.2.9-rc1 -> 4.2.9
+string(REGEX REPLACE "^v?([0-9]+(\\.[0-9]+)*).*$" "\\1" CLEAN_APP_VERSION "${APP_VERSION}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 

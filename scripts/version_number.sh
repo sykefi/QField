@@ -36,7 +36,7 @@ apk_version_code() {
 	VERSION_MAJOR=$(echo "${APP_VERSION}" | cut -f 2 -dv | cut -f1 -d.)
 	VERSION_MINOR=$(echo "${APP_VERSION}" | cut -f 2 -d.)
 	VERSION_FIX=$(echo "${APP_VERSION}" | cut -f 3 -d. | cut -f1 -d-)
-	VERSION_NUMBER=$(echo "${APP_VERSION}" | ${GP}sed -r -e 's/^.*-rc([0-9]+)/\1/;t;d') # v.1.2.3-rc4 => 4, v1.2.3 => NULL
+	VERSION_NUMBER=$(echo "${APP_VERSION}" | ${GP}sed -r -e 's/^.*-(rc|syke)([0-9]+)/\2/;t;d') # v1.2.3-rc4 => 4, v1.2.3-syke2 => 2, v1.2.3 => NULL
 
 	APK_VERSION_CODE=$(printf "%02d%02d%02d%02d%01d" ${VERSION_MAJOR} ${VERSION_MINOR} ${VERSION_FIX} ${VERSION_NUMBER:-99} ${TRIPLET_BUILD_NUMBER})
 	echo ${APK_VERSION_CODE}
